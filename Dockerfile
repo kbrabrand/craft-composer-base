@@ -6,12 +6,14 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Install dependencies required by php-extensions
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y git zip \
-  libpng-dev libmcrypt-dev mysql-client libmagickwand-dev mysqltuner libmemcached-dev libicu-dev
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y curl git zip \
+  libc-client-dev libkrb5-dev libpng-dev libmcrypt-dev mysql-client libmagickwand-dev \
+  mysqltuner libmemcached-dev libicu-dev
 
 # Install composer and the php-extensions themselves.
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
   docker-php-ext-install gd mcrypt pdo_mysql zip intl && \
+  docker-php-ext-configure imap --with-kerberos --with-imap-ssl && docker-php-ext-install imap && \
   echo '' | pecl install redis && docker-php-ext-enable redis && \
   echo '' | pecl install imagick && docker-php-ext-enable imagick && \
   echo '' | pecl install memcached && docker-php-ext-enable memcached
